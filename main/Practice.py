@@ -6,25 +6,32 @@ def send(a, b, array):
 
     #  Populate the Buffer A
     idx = 0
-    for var in enumerate(array):
+    idx2 = 0
+    alternate = True
+    for i, var in enumerate(array):
 
         if idx != 0 and idx % 10 == 0:  # reset idx back to 0 after every 10 intervals
             idx = 0
 
-        a[idx] = var[1]
-        sleep(1)
-        idx += 1
+        if is_buffer_full(a) is False and alternate:
+            print("Writing to Buffer A: " + str(var))
+            a[idx] = var
+            sleep(1)
+            idx += 1
+            if idx == 10:
+                alternate = not alternate
 
-    # Populate Buffer B
-    idx2 = 0
-    for var in enumerate(array):
+        if is_buffer_full(b) is False and not alternate:
+            print("Writing to Buffer B: " + str(var))
 
-        if idx2 != 0 and idx2 % 10 == 0:
-            idx2 = 0
+            if idx2 != 0 and idx2 % 10 == 0:
+                idx2 = 0
 
-        b[idx2] = var[1]
-        sleep(1)
-        idx2 += 1
+            b[idx2] = var
+            sleep(1)
+            idx2 += 1
+            if idx2 == 10:
+                alternate = not alternate
 
 
 def receive(a, b):
@@ -35,6 +42,7 @@ def receive(a, b):
             for idx, var in enumerate(a):
                 print(var)
                 a[idx] = 0
+                sleep(1)
 
             count += 10
 
@@ -42,6 +50,7 @@ def receive(a, b):
             for idx, var in enumerate(b):
                 print(var)
                 b[idx] = var
+                sleep(1)
 
             count += 10
     print("receiving process")
@@ -64,6 +73,11 @@ if __name__ == "__main__":
         31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
         41, 42, 43, 44, 45, 46, 47, 48, 49, 50
     ]
+
+    something = True
+    print(something)
+    something = not something
+    print(something)
 
     shared_a = Array('i', 10)
     shared_b = Array('i', 10)
