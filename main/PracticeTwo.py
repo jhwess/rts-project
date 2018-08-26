@@ -10,8 +10,8 @@ receivedCount = 0
 def send(*buffers):
     global sentCount
 
-    def write_int(buffer, currentint):
-        print("Writing integer " + str(currentint) + " to buffer")
+    def write_int(buffer, currentint, buff_name):
+        print("Writing integer " + str(currentint) + " to buffer", buff_name)
         buffer.put_nowait(currentint)
 
     finished_sending = False
@@ -20,7 +20,10 @@ def send(*buffers):
             if b.empty():
                 count = 1
                 while count <= 10 and not finished_sending:
-                    write_int(b, count)
+                    buffer_name = "A"
+                    if buffers[1] == b:
+                        buffer_name = "B"
+                    write_int(b, sentCount, buffer_name)
                     count += 1
                     sentCount += 1
                     print("Write count: " + str(sentCount))
@@ -32,18 +35,21 @@ def send(*buffers):
 def receive(*buffers):
     global receivedCount
 
-    def read_int(buffer):
+    def read_int(buffer, buff_name):
         current_int = buffer.get()
-        print("Reading integer", current_int, "from buffer")
+        print("\t\t\t\t\t\t\tReading integer", current_int, "from buffer", buff_name)
 
     finished_reading = False
     while not finished_reading:
         for b in buffers:
             if b.full():
                 while not b.empty() and not finished_reading:
-                    read_int(b)
+                    buffer_name = "A"
+                    if buffers[1] == b:
+                        buffer_name = "B"
+                    read_int(b, buffer_name)
                     receivedCount += 1
-                    print("Read count: " + str(receivedCount))
+                    print("\t\t\t\t\t\t\tRead count: " + str(receivedCount))
                     if receivedCount == LIMIT:
                         finished_reading = True
                     sleep(1)
