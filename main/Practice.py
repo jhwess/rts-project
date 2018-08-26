@@ -10,28 +10,24 @@ def send(a, b, array):
     alternate = True
     for i, var in enumerate(array):
 
-        if idx != 0 and idx % 10 == 0:  # reset idx back to 0 after every 10 intervals
-            idx = 0
-
         if is_buffer_full(a) is False and alternate:
             print("Writing to Buffer A: " + str(var))
             a[idx] = var
             sleep(1)
             idx += 1
-            if idx == 10:
+            if idx == 10:  # Reset idx back to 0 after every 10 intervals and alternate to other buffer
                 alternate = not alternate
+                idx = 0
 
         if is_buffer_full(b) is False and not alternate:
             print("Writing to Buffer B: " + str(var))
 
-            if idx2 != 0 and idx2 % 10 == 0:
-                idx2 = 0
-
             b[idx2] = var
             sleep(1)
             idx2 += 1
-            if idx2 == 10:
+            if idx2 == 10:  # Reset idx2 back to 0 after every 10 intervals and alternate to other buffer
                 alternate = not alternate
+                idx2 = 0
 
 
 def receive(a, b):
@@ -40,7 +36,7 @@ def receive(a, b):
     while count < 50:
         if is_buffer_full(a):
             for idx, var in enumerate(a):
-                print(var)
+                print("\t\t\t\t\t\t\tReading from Buffer A: " + str(var))
                 a[idx] = 0
                 sleep(1)
 
@@ -48,17 +44,17 @@ def receive(a, b):
 
         if is_buffer_full(b):
             for idx, var in enumerate(b):
-                print(var)
-                b[idx] = var
+                print("\t\t\t\t\t\t\tReading from Buffer B: " + str(var))
+                b[idx] = 0
                 sleep(1)
 
             count += 10
     print("receiving process")
 
 
-def is_buffer_full(buffer):
+def is_buffer_full(buff):
     full = True
-    for var in buffer:
+    for var in buff:
         if var == 0:
             full = False
 
@@ -73,11 +69,6 @@ if __name__ == "__main__":
         31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
         41, 42, 43, 44, 45, 46, 47, 48, 49, 50
     ]
-
-    something = True
-    print(something)
-    something = not something
-    print(something)
 
     shared_a = Array('i', 10)
     shared_b = Array('i', 10)
