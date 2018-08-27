@@ -19,7 +19,7 @@ def send(a, b, array):
                 alternate = not alternate
                 idx = 0
 
-        if is_buffer_full(b) is False and not alternate:
+        elif is_buffer_full(b) is False and not alternate:
             print("Writing to Buffer B: " + str(var))
 
             b[idx2] = var
