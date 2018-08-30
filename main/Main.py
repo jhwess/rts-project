@@ -14,7 +14,6 @@ def process_1(a, b):
         if alternate:  # if alternate A -> P1 -> B
             for idx, a_val in enumerate(a):  # Write to Buffer B from Buffer A
                 if a_val != 0:
-                    b[idx] = a_val
                     if a_val == 1:
                         x_row = idx // 7
                         x_col = idx % 7
@@ -28,14 +27,21 @@ def process_1(a, b):
             x_row = (x_row + 1) % 8
             x_col = (x_col + 1) % 7
             y_row = (y_row + 1) % 8
-            y_col += 2
-            z_row += 3
+            y_col = 2
+            z_row = 3
             z_col = (z_col + 1) % 7
+
+            x_idx = (x_row * 7) + x_col
+            y_idx = (y_row * 7) + y_col
+            z_idx = (z_row * 7) + z_col
+
+            b[x_idx] = 1
+            b[y_idx] = 2
+            b[z_idx] = 3
 
         elif not alternate:  # if not alternate B -> P1 -> A
             for idx, b_val in enumerate(b):
                 if b_val != 0:
-                    a[idx] = b_val
                     if b_val == 1:
                         x_row = idx // 7
                         x_col = idx % 7
@@ -49,9 +55,17 @@ def process_1(a, b):
             x_row = (x_row + 1) % 8
             x_col = (x_col + 1) % 7
             y_row = (y_row + 1) % 8
-            y_col += 2
-            z_row += 3
+            y_col = 2
+            z_row = 3
             z_col = (z_col + 1) % 7
+
+            x_idx = (x_row * 7) + x_col
+            y_idx = (y_row * 7) + y_col
+            z_idx = (z_row * 7) + z_col
+
+            a[x_idx] = 1
+            a[y_idx] = 2
+            a[z_idx] = 3
 
         alternate = not alternate
         sleep(1)
