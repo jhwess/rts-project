@@ -78,58 +78,76 @@ def process_2(a, b, c, d):
     end = time() + 20  # 20 seconds from now
 
     while time() < end:  # run for 20 seconds
-        if alternate:  # if alternate A -> P2 -> C
-            for idx, a_val in enumerate(a):
-                if a_val == 1:  # x
-                    x_row = idx // 7
-                    x_col = idx % 7
-                elif a_val == 2:  # y
-                    y_row = idx // 7
-                    y_col = idx % 7
-                elif a_val == 3:  # z
-                    z_row = idx // 7
-                    z_col = idx % 7
+        # if alternate A -> P2 -> C
+        read_buffer = a
+        write_buffer = c
+        if not alternate:
+            # if not alternate B -> P2 -> D
+            print("Process 2 should be reading from B")
+            read_buffer = b
+            write_buffer = d
+        print("Process 2 reading from buffer:")
+        display_buffer = ctypeslib.as_array(read_buffer.get_obj())
+        display_buffer = display_buffer.reshape(8, 7)
+        print(display_buffer)
 
-            print(x_row)
-            print(x_col)
-            print(y_row)
-            print(y_col)
-            print(z_row)
-            print(z_col)
+        for idx, read_val in enumerate(read_buffer):
+            if read_val == 1:  # x
+                x_row = idx // 7
+                x_col = idx % 7
+            elif read_val == 2:  # y
+                y_row = idx // 7
+                y_col = idx % 7
+            elif read_val == 3:  # z
+                z_row = idx // 7
+                z_col = idx % 7
 
-            print("alternate")
-        elif not alternate:  # if not alternate B -> P2 -> D
-            for idx, b_val in enumerate(b):
-                if b_val == 1:  # x
-                    x_row = idx // 7
-                    x_col = idx % 7
-                elif b_val == 2:  # y
-                    y_row = idx // 7
-                    y_col = idx % 7
-                elif b_val == 3:  # z
-                    z_row = idx // 7
-                    z_col = idx % 7
-
-            print(x_row)
-            print(x_col)
-            print(y_row)
-            print(y_col)
-            print(z_row)
-            print(z_col)
-            print("not alternate")
+        write_buffer[0] = x_row
+        write_buffer[1] = x_col
+        write_buffer[2] = y_row
+        write_buffer[3] = y_col
+        write_buffer[4] = z_row
+        write_buffer[5] = z_col
 
         alternate = not alternate
         sleep(1)
 
-    print("process 2")
-
 
 def process_3(c, d):
-
+    start = time()
+    end = start + 20
     alternate = True
+    while time() < end:
+        read_buffer = c
+        current_matrix_name = "C"
+        if not alternate:
+            read_buffer = d
+            current_matrix_name = "D"
 
-    print("process 3")
+        current_time = int(round(time() - start))
+        if current_time > 1:
+            # Create a list for each train
+            train_x = [read_buffer[0], read_buffer[1]]
+            train_y = [read_buffer[2], read_buffer[3]]
+            train_z = [read_buffer[4], read_buffer[5]]
+            trains = [train_x, train_y, train_z]
 
+            print("Current time: " + str(current_time))
+            print("Process 3 reading from matrix: " + current_matrix_name)
+            print("Train X: " + str(train_x))
+            print("Train Y: " + str(train_y))
+            print("Train Z: " + str(train_z))
+
+            train_names = ["X", "Y", "Z"]
+            # Determine if collision occurs
+            for i in range(0, len(trains)):
+                for j in range(i + 1, len(trains)):
+                    if trains[i] == trains[j]:
+
+                        print("Collision detected at time " + str(current_time - 1) + " between " + train_names[i] + " and " + train_names[j])
+
+            alternate = not alternate
+            sleep(1)
 
 if __name__ == "__main__":
     root = Tk()
@@ -139,8 +157,8 @@ if __name__ == "__main__":
 
     buffer_a = Array('i', 56)  # Buffer A 8 x 7 matrix
     buffer_b = Array('i', 56)  # Buffer B 8 x 7 matrix
-    buffer_c = Array('i', 9)   # Buffer C 3 x 3 matrix
-    buffer_d = Array('i', 9)   # Buffer D 3 x 3 matrix
+    buffer_c = Array('i', 6)   # Buffer C 3 x 2 matrix
+    buffer_d = Array('i', 6)   # Buffer D 3 x 2 matrix
 
     initial_x = 0  # idx / 7 = row, idx % 7 = col
     initial_y = 2  # idx / 7 = row, idx % 7 = col
