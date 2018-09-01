@@ -6,8 +6,10 @@ from numpy import *
 
 def process_1(a, b):
 
-    global idx, x_row, x_col, y_row, y_col, z_row, z_col
+    global idx, x_row, x_col, y_row, y_col, z_row, z_col, prev_x_a_idx, prev_y_a_idx, prev_z_a_idx, prev_x_b_idx, \
+        prev_y_b_idx, prev_z_b_idx
     alternate = True
+    first_time = True  # Hack way of doing this
     end = time() + 20  # 20 seconds from now
 
     while time() < end:  # run for 20 seconds
@@ -15,12 +17,15 @@ def process_1(a, b):
             for idx, a_val in enumerate(a):  # Write to Buffer B from Buffer A
                 if a_val != 0:
                     if a_val == 1:
+                        prev_x_a_idx = idx
                         x_row = idx // 7
                         x_col = idx % 7
                     elif a_val == 2:
+                        prev_y_a_idx = idx
                         y_row = idx // 7
                         y_col = idx % 7
                     elif a_val == 3:
+                        prev_z_a_idx = idx
                         z_row = idx // 7
                         z_col = idx % 7
 
@@ -34,6 +39,11 @@ def process_1(a, b):
             x_idx = (x_row * 7) + x_col
             y_idx = (y_row * 7) + y_col
             z_idx = (z_row * 7) + z_col
+
+            if not first_time:
+                b[prev_x_b_idx] = 0
+                b[prev_y_b_idx] = 0
+                b[prev_z_b_idx] = 0
 
             b[x_idx] = 1
             b[y_idx] = 2
@@ -43,12 +53,15 @@ def process_1(a, b):
             for idx, b_val in enumerate(b):
                 if b_val != 0:
                     if b_val == 1:
+                        prev_x_b_idx = idx
                         x_row = idx // 7
                         x_col = idx % 7
                     elif b_val == 2:
+                        prev_y_b_idx = idx
                         y_row = idx // 7
                         y_col = idx % 7
                     elif b_val == 3:
+                        prev_z_b_idx = idx
                         z_row = idx // 7
                         z_col = idx % 7
 
@@ -63,11 +76,16 @@ def process_1(a, b):
             y_idx = (y_row * 7) + y_col
             z_idx = (z_row * 7) + z_col
 
+            a[prev_x_a_idx] = 0
+            a[prev_y_a_idx] = 0
+            a[prev_z_a_idx] = 0
+
             a[x_idx] = 1
             a[y_idx] = 2
             a[z_idx] = 3
 
         alternate = not alternate
+        first_time = False  # No shame
         sleep(1)
 
 
