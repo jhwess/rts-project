@@ -45,9 +45,26 @@ def process_1(a, b):
                 b[prev_y_b_idx] = 0
                 b[prev_z_b_idx] = 0
 
-            b[x_idx] = 1
-            b[y_idx] = 2
-            b[z_idx] = 3
+            if b[x_idx] == 2:
+                print("Collision between X and Y")
+            elif b[x_idx] == 3:
+                print("Collision between X and Z")
+            else:
+                b[x_idx] = 1
+
+            if b[y_idx] == 1:
+                print("Collision between Y and X")
+            elif b[y_idx] == 3:
+                print("Collision between Y and Z")
+            else:
+                b[y_idx] = 2
+
+            if b[z_idx] == 1:
+                print("Collision between Z and X")
+            elif b[z_idx] == 2:
+                print("Collision between Z and Y")
+            else:
+                b[z_idx] = 3
 
         elif not alternate:  # if not alternate B -> P1 -> A
             for idx, b_val in enumerate(b):
@@ -80,9 +97,26 @@ def process_1(a, b):
             a[prev_y_a_idx] = 0
             a[prev_z_a_idx] = 0
 
-            a[x_idx] = 1
-            a[y_idx] = 2
-            a[z_idx] = 3
+            if a[x_idx] == 2:
+                print("Collision between X and Y")
+            elif a[x_idx] == 3:
+                print("Collision between X and Z")
+            else:
+                a[x_idx] = 1
+
+            if a[y_idx] == 1:
+                print("Collision between Y and X")
+            elif a[y_idx] == 3:
+                print("Collision between Y and Z")
+            else:
+                a[y_idx] = 2
+
+            if a[z_idx] == 1:
+                print("Collision between Z and X")
+            elif a[z_idx] == 2:
+                print("Collision between Z and Y")
+            else:
+                a[z_idx] = 3
 
         alternate = not alternate
         first_time = False  # No shame
