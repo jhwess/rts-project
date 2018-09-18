@@ -4,7 +4,11 @@ from time import *
 from numpy import *
 
 
-def process_1(a, b):
+class Train:
+    pass
+
+
+def process_1(a, b, collisions_1):
 
     global idx, x_row, x_col, y_row, y_col, z_row, z_col, prev_x_a_idx, prev_y_a_idx, prev_z_a_idx, prev_x_b_idx, \
         prev_y_b_idx, prev_z_b_idx
@@ -30,12 +34,21 @@ def process_1(a, b):
                     z_row = idx // 7
                     z_col = idx % 7
 
-        x_row = (x_row + 1) % 8
-        x_col = (x_col + 1) % 7
-        y_row = (y_row + 1) % 8
-        y_col = 2
-        z_row = 3
-        z_col = (z_col + 1) % 7
+        print("P1DEBUG:" + str(collisions_1))
+        if not collisions_1["X"]:
+            x_row = (x_row + 1) % 8
+            x_col = (x_col + 1) % 7
+        else:
+            collisions_1["X"] = False  # set back to False once stopped
+            print("This should be called at least once???")
+
+        if not collisions_1["Y"]:
+            y_row = (y_row + 1) % 8
+            y_col = 2
+
+        if not collisions_1["Z"]:
+            z_row = 3
+            z_col = (z_col + 1) % 7
 
         x_idx = (x_row * 7) + x_col
         y_idx = (y_row * 7) + y_col
@@ -96,11 +109,11 @@ def process_2(a, b, c, d):
         sleep(1)
 
 
-def process_3(c, d):
+def process_3(c, d, collisions_3):
     start = time()
     end = start + 20
     alternate = True
-    future_collision = False  # boolean variable to indicate whether there will be a collision in the next iteration
+
     trains_that_will_collide = []  # array to hold which trains will collide
     while time() < end:
         read_buffer = c
@@ -111,22 +124,32 @@ def process_3(c, d):
 
         current_time = int(round(time() - start))
 
-        if future_collision:
-            print("A train might collide")
-            print(array_equal(trains_that_will_collide, ["X", "Y"]))
-            # Determine which trains are colliding
-            print(trains_that_will_collide)
+        # Look ahead to see the future coordinates of the trains
+        future_row_train_x = (int(read_buffer[1]) + 1) % 8
+        future_col_train_x = (int(read_buffer[2]) + 1) % 7
+        future_train_x = ["X", (future_row_train_x + 1), (future_col_train_x + 1)]
 
-            if array_equal(trains_that_will_collide, ["X", "Y"]):
+        future_row_train_y = (int(read_buffer[4]) + 1) % 8
+        future_col_train_y = 2
+        future_train_y = ["Y", (future_row_train_y + 1), future_col_train_y]
 
-                print()
-            elif array_equal(trains_that_will_collide, ["X", "Z"]):
-                print()
-            elif array_equal(trains_that_will_collide, ["Y", "Z"]):
-                print()
+        future_row_train_z = 3
+        future_col_train_z = (int(read_buffer[8]) + 1) % 7
+        future_train_z = ["Z", future_row_train_z, future_col_train_z]
 
-            trains_that_will_collide = []
-            future_collision = not future_collision
+        future_trains = [future_train_x, future_train_y, future_train_z]
+
+        # Logic for detecting which trains will collide in future
+        for i in range(0, len(future_trains)):
+            train_i = future_trains[i][1:len(future_trains[i])]  # Value of train at i index only the coordinates
+            for j in range(i + 1, len(future_trains)):
+                train_j = future_trains[j][1:len(future_trains[j])]  # Value train at j index only the coordinates
+                if train_i == train_j:
+                    # print("We need to avoid this collision between " + str(future_trains[i][0])
+                    #       + " and " + str(future_trains[j][0]))
+                    trains_that_will_collide = [future_trains[i][0], future_trains[j][0]]
+                    if trains_that_will_collide == ["X", "Y"]:  # if trains x and y are colliding
+                        collisions_3["X"] = True  # Set to true so P1 knows to stop train
 
         if current_time > 1:
             # Create a list for each train
@@ -134,32 +157,6 @@ def process_3(c, d):
             train_y = [read_buffer[4], read_buffer[5]]
             train_z = [read_buffer[7], read_buffer[8]]
             trains = [train_x, train_y, train_z]
-
-            # Look ahead to see the future coordinates of the trains
-            future_row_train_x = (read_buffer[1] + 1) % 8
-            future_col_train_x = (read_buffer[2] + 1) % 7
-            future_train_x = ["X", future_row_train_x, future_col_train_x]
-
-            future_row_train_y = (read_buffer[4] + 1) % 8
-            future_col_train_y = 2
-            future_train_y = ["Y", future_row_train_y, future_col_train_y]
-
-            future_row_train_z = 3
-            future_col_train_z = (read_buffer[8] + 1) % 7
-            future_train_z = ["Z", future_row_train_z, future_col_train_z]
-
-            future_trains = [future_train_x, future_train_y, future_train_z]
-
-            #  Logic for avoiding collisions
-            for i in range(0, len(future_trains)):
-                train_i = future_trains[i][1:len(future_trains[i])]  # Value of train at i index only the coordinates
-                for j in range(i + 1, len(future_trains)):
-                    train_j = future_trains[j][1:len(future_trains[j])]  # Value train at j index only the coordinates
-                    if train_i == train_j:
-                        future_collision = True
-                        print("We need to avoid this collision between " + str(future_trains[i][0])
-                              + " and " + str(future_trains[j][0]))
-                        trains_that_will_collide = [future_trains[i][0], future_trains[j][0]]
 
             print("Current time: " + str(current_time))
             print("Process 3 reading from matrix: " + current_matrix_name)
@@ -175,8 +172,33 @@ def process_3(c, d):
                             "**COLLISION DETECTED at time " + str(current_time - 1) + " between " + train_names[i] +
                             " and " + train_names[j] + " at position " + str(trains[i]) + "**")
 
-            alternate = not alternate
-            sleep(1)
+        alternate = not alternate
+        sleep(1)
+
+
+def look_ahead_twice(buff):
+    future_x = Train()
+    future_y = Train()
+    future_z = Train()
+
+    future_row_train_x = (buff[1] + 1) % 8
+    future_col_train_x = (buff[2] + 1) % 7
+    future_train_x = ["X", future_row_train_x, future_col_train_x]
+    future_x.coordinates = [future_row_train_x, future_col_train_x]
+
+    future_row_train_y = (buff[4] + 1) % 8
+    future_col_train_y = 2
+    future_train_y = ["Y", future_row_train_y, future_col_train_y]
+    future_y.coordinates = [future_row_train_y, future_col_train_y]
+
+    future_row_train_z = 3
+    future_col_train_z = (buff[8] + 1) % 7
+    future_train_z = ["Z", future_row_train_z, future_col_train_z]
+    future_z.coordinates = [future_row_train_z, future_col_train_z]
+
+    future_trains = [future_train_x, future_train_y, future_train_z]
+
+    print()
 
 
 if __name__ == "__main__":
@@ -207,9 +229,17 @@ if __name__ == "__main__":
     buffer_a[initial_y] = "Y"
     buffer_a[initial_z] = "Z"
 
-    p1 = Process(target=process_1, args=(buffer_a, buffer_b))
+    collision_dict = {
+        "X": False,
+        "Y": False,
+        "Z": False
+    }
+
+    trains_to_stop = manager.dict(collision_dict)
+
+    p1 = Process(target=process_1, args=(buffer_a, buffer_b, trains_to_stop))
     p2 = Process(target=process_2, args=(buffer_a, buffer_b, buffer_c, buffer_d))
-    p3 = Process(target=process_3, args=(buffer_c, buffer_d))
+    p3 = Process(target=process_3, args=(buffer_c, buffer_d, trains_to_stop))
 
     p1.start()
     p2.start()
