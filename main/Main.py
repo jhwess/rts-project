@@ -6,8 +6,10 @@ from numpy import *
 
 def process_1(a, b):
 
-    global idx, x_row, x_col, y_row, y_col, z_row, z_col
+    global idx, x_row, x_col, y_row, y_col, z_row, z_col, prev_x_a_idx, prev_y_a_idx, prev_z_a_idx, prev_x_b_idx, \
+        prev_y_b_idx, prev_z_b_idx
     alternate = True
+    first_time = True  # Hack way of doing this
     end = time() + 20  # 20 seconds from now
 
     while time() < end:  # run for 20 seconds
@@ -46,6 +48,7 @@ def process_1(a, b):
         write_buffer[z_idx] = (write_buffer[z_idx] + "Z").strip("0")
 
         alternate = not alternate
+        first_time = False  # No shame
         sleep(1)
 
 
