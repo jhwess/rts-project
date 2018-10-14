@@ -5,7 +5,8 @@ from numpy import *
 
 
 class Train:
-    pass
+    def __init__(self):
+        pass
 
 
 def process_1(a, b, collisions_1):
@@ -34,21 +35,24 @@ def process_1(a, b, collisions_1):
                     z_row = idx // 7
                     z_col = idx % 7
 
-        print("P1DEBUG:" + str(collisions_1))
-        if not collisions_1["X"]:
+        random_number = random.randint(1, 101)  # Generate a random number between 1 and 100
+
+        print("DEBUG:" + str(random_number))
+
+        if not collisions_1["X"] or random_number <= 10:  # X has a 10% chance of failing
             x_row = (x_row + 1) % 8
             x_col = (x_col + 1) % 7
         else:
             collisions_1["X"] = False  # set back to False once stopped
             print("This should be called at least once???")
 
-        if not collisions_1["Y"]:
+        if not collisions_1["Y"] or random_number <= 5:  # Y has a 5% chance of failing
             y_row = (y_row + 1) % 8
             y_col = 2
         else:
             collisions_1["Y"] = False
 
-        if not collisions_1["Z"]:
+        if not collisions_1["Z"] or random_number == 1:  # Z has a 1% chance of failing
             z_row = 3
             z_col = (z_col + 1) % 7
         else:
