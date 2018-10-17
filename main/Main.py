@@ -17,6 +17,11 @@ def process_1(a, b, collisions_1):
     first_time = True  # Hack way of doing this
     end = time() + 20  # 20 seconds from now
 
+    # boolean variables to be set when a train is supposed to permanently fail
+    train_x_perm_fail = False
+    train_y_perm_fail = False
+    train_z_perm_fail = False
+
     while time() < end:  # run for 20 seconds
         read_buffer = a
         write_buffer = b
@@ -37,22 +42,31 @@ def process_1(a, b, collisions_1):
 
         random_number = random.randint(1, 101)  # Generate a random number between 1 and 100
 
+        if random_number <= 10:
+            train_x_perm_fail = True
+
+        if random_number <= 5:
+            train_y_perm_fail = True
+
+        if random_number == 1:
+            train_z_perm_fail = True
+
         print("DEBUG:" + str(random_number))
 
-        if not collisions_1["X"] or random_number <= 10:  # X has a 10% chance of failing
+        if not collisions_1["X"] or train_x_perm_fail:  # X has a 10% chance of failing
             x_row = (x_row + 1) % 8
             x_col = (x_col + 1) % 7
         else:
             collisions_1["X"] = False  # set back to False once stopped
             print("This should be called at least once???")
 
-        if not collisions_1["Y"] or random_number <= 5:  # Y has a 5% chance of failing
+        if not collisions_1["Y"] or train_y_perm_fail:  # Y has a 5% chance of failing
             y_row = (y_row + 1) % 8
             y_col = 2
         else:
             collisions_1["Y"] = False
 
-        if not collisions_1["Z"] or random_number == 1:  # Z has a 1% chance of failing
+        if not collisions_1["Z"] or train_z_perm_fail:  # Z has a 1% chance of failing
             z_row = 3
             z_col = (z_col + 1) % 7
         else:
