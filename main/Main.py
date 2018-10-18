@@ -9,18 +9,11 @@ class Train:
         pass
 
 
-def process_1(a, b, collisions_1):
+def process_1(a, b, collisions_1, failed_trains):
 
-    global idx, x_row, x_col, y_row, y_col, z_row, z_col, prev_x_a_idx, prev_y_a_idx, prev_z_a_idx, prev_x_b_idx, \
-        prev_y_b_idx, prev_z_b_idx
+    global idx, x_row, x_col, y_row, y_col, z_row, z_col
     alternate = True
-    first_time = True  # Hack way of doing this
     end = time() + 20  # 20 seconds from now
-
-    # boolean variables to be set when a train is supposed to permanently fail
-    train_x_perm_fail = False
-    train_y_perm_fail = False
-    train_z_perm_fail = False
 
     while time() < end:  # run for 20 seconds
         read_buffer = a
@@ -42,35 +35,47 @@ def process_1(a, b, collisions_1):
 
         random_number = random.randint(1, 101)  # Generate a random number between 1 and 100
 
-        if random_number <= 10:
-            train_x_perm_fail = True
+        if random_number <= 10 and not failed_trains["X"]:
+            print("Train X has failed.")
+            failed_trains["X"] = True
 
-        if random_number <= 5:
-            train_y_perm_fail = True
+        if random_number <= 5 and not failed_trains["Y"]:
+            print("Train Y has failed.")
+            failed_trains["Y"] = True
 
-        if random_number == 1:
-            train_z_perm_fail = True
+        if random_number == 1 and not failed_trains["Z"]:
+            print("Train Z has failed.")
+            failed_trains["Z"] = True
 
-        print("DEBUG:" + str(random_number))
+        # If the first train in a collision has just failed,
+        # fill in the second train in the collisions dict so it will be stopped instead.
+        if collisions_1["X"] and failed_trains["X"]:
+            collisions_1[collisions_1["X"]] = "X"
 
-        if not collisions_1["X"] or train_x_perm_fail:  # X has a 10% chance of failing
+        if collisions_1["Y"] and failed_trains["Y"]:
+            collisions_1[collisions_1["Y"]] = "Y"
+
+        if collisions_1["Z"] and failed_trains["Z"]:
+            collisions_1[collisions_1["Z"]] = "Z"
+
+        print("Trains to stop:" + str(collisions_1))
+        if not collisions_1["X"] or failed_trains["X"]:  # X has a 10% chance of failing
             x_row = (x_row + 1) % 8
             x_col = (x_col + 1) % 7
         else:
-            collisions_1["X"] = False  # set back to False once stopped
-            print("This should be called at least once???")
+            collisions_1["X"] = ""  # set back to False once stopped
 
-        if not collisions_1["Y"] or train_y_perm_fail:  # Y has a 5% chance of failing
+        if not collisions_1["Y"] or failed_trains["Y"]:  # Y has a 5% chance of failing
             y_row = (y_row + 1) % 8
             y_col = 2
         else:
-            collisions_1["Y"] = False
+            collisions_1["Y"] = ""
 
-        if not collisions_1["Z"] or train_z_perm_fail:  # Z has a 1% chance of failing
+        if not collisions_1["Z"] or failed_trains["Z"]:  # Z has a 1% chance of failing
             z_row = 3
             z_col = (z_col + 1) % 7
         else:
-            collisions_1["Z"] = False
+            collisions_1["Z"] = ""
 
         x_idx = (x_row * 7) + x_col
         y_idx = (y_row * 7) + y_col
@@ -83,7 +88,6 @@ def process_1(a, b, collisions_1):
         write_buffer[z_idx] = (write_buffer[z_idx] + "Z").strip("0")
 
         alternate = not alternate
-        first_time = False  # No shame
         sleep(1)
 
 
@@ -102,9 +106,7 @@ def process_2(a, b, c, d):
             print("Process 2 should be reading from B")
             read_buffer = b
             write_buffer = d
-        print("Process 2 reading from buffer:")
-        display_buffer = ctypeslib.as_array(read_buffer)
-        print(display_buffer.reshape(8, 7))
+        print("Process 2 reading from buffer: \n" + str(ctypeslib.as_array(read_buffer).reshape(8, 7)))
 
         for idx, read_val in enumerate(read_buffer):
             if "X" in read_val:  # x
@@ -131,12 +133,11 @@ def process_2(a, b, c, d):
         sleep(1)
 
 
-def process_3(c, d, collisions_3):
+def process_3(c, d, collisions_3, failed_trains):
     start = time()
     end = start + 20
     alternate = True
 
-    trains_that_will_collide = []  # array to hold which trains will collide
     while time() < end:
         read_buffer = c
         current_matrix_name = "C"
@@ -147,7 +148,7 @@ def process_3(c, d, collisions_3):
         current_time = int(round(time() - start))
 
         # Look ahead to see the future coordinates of the trains
-        if current_time <= 1:
+        if current_time < 1:
             future_row_train_x = (((int(read_buffer[1]) + 1) % 8) + 1) % 8
             future_col_train_x = (((int(read_buffer[2]) + 1) % 7) + 1) % 7
             future_train_x = ["X", future_row_train_x, future_col_train_x]
@@ -162,22 +163,9 @@ def process_3(c, d, collisions_3):
 
             future_trains = [future_train_x, future_train_y, future_train_z]
 
-            # Logic for detecting which trains will collide in future
-            for i in range(0, len(future_trains)):
-                train_i = future_trains[i][1:len(future_trains[i])]  # Value of train at i index only the coordinates
-                for j in range(i + 1, len(future_trains)):
-                    train_j = future_trains[j][1:len(future_trains[j])]  # Value train at j index only the coordinates
-                    if train_i == train_j:
-                        print(str(current_time) + "Collision predicted to occur at time: " + str(current_time + 2) + " at position: " + str(train_i))
-                        trains_that_will_collide = [future_trains[i][0], future_trains[j][0]]
-                        if trains_that_will_collide == ["X", "Y"]:  # if trains x and y are colliding
-                            collisions_3["X"] = True  # Set to true so P1 knows to stop train
-                            print("X and Y will collide")
-                        elif trains_that_will_collide == ["Y", "Z"]:
-                            collisions_3["Y"] = True
-                            print("Y and Z will collide" + str(current_time))
+            predict_collision(future_trains, current_time, failed_trains, collisions_3)
 
-        if current_time > 1:
+        if current_time >= 1:
             # Look ahead to see the future coordinates of the trains
             future_row_train_x = (((((int(read_buffer[1]) + 1) % 8) + 1) % 8) + 1) % 8
             future_col_train_x = (((((int(read_buffer[2]) + 1) % 7) + 1) % 7) + 1) % 7
@@ -193,29 +181,15 @@ def process_3(c, d, collisions_3):
 
             future_trains = [future_train_x, future_train_y, future_train_z]
 
-            # Logic for detecting which trains will collide in future
-            for i in range(0, len(future_trains)):
-                train_i = future_trains[i][1:len(future_trains[i])]  # Value of train at i index only the coordinates
-                for j in range(i + 1, len(future_trains)):
-                    train_j = future_trains[j][1:len(future_trains[j])]  # Value train at j index only the coordinates
-                    if train_i == train_j:
-                        print(str(current_time) + "Collision predicted to occur at time: " + str(
-                            current_time + 1) + " at position: " + str(train_i))
-                        trains_that_will_collide = [future_trains[i][0], future_trains[j][0]]
-                        if trains_that_will_collide == ["X", "Y"]:  # if trains x and y are colliding
-                            collisions_3["X"] = True  # Set to true so P1 knows to stop train
-                            print("X and Y will collide")
-                        elif trains_that_will_collide == ["Y", "Z"]:
-                            collisions_3["Y"] = True
-                            print("Y and Z will collide" + str(current_time))
+            predict_collision(future_trains, current_time, failed_trains, collisions_3)
 
+        if current_time > 1:
             # Create a list for each train
             train_x = [read_buffer[1], read_buffer[2]]
             train_y = [read_buffer[4], read_buffer[5]]
             train_z = [read_buffer[7], read_buffer[8]]
             trains = [train_x, train_y, train_z]
 
-            print("Current time: " + str(current_time))
             print("Process 3 reading from matrix: " + current_matrix_name)
             display_buffer = ctypeslib.as_array(read_buffer)
             print(display_buffer.reshape(3, 3))
@@ -227,35 +201,57 @@ def process_3(c, d, collisions_3):
                     if trains[i] == trains[j]:  # In theory this block of code should not run
                         print(
                             "**COLLISION DETECTED at time " + str(current_time - 1) + " between " + train_names[i] +
-                            " and " + train_names[j] + " at position " + str(trains[i]) + "**")
+                            " and " + train_names[j] + " at position " + str(trains[i]) + "**"
+                        )
+                        if failed_trains["X"] and failed_trains["Y"] and failed_trains["Z"]:
+                            print("A collision has occurred and all trains have failed. The program will now exit.")
+                            sys.exit()
 
         alternate = not alternate
         sleep(1)
 
 
-def look_ahead_twice(buff):
-    future_x = Train()
-    future_y = Train()
-    future_z = Train()
-
-    future_row_train_x = (buff[1] + 1) % 8
-    future_col_train_x = (buff[2] + 1) % 7
-    future_train_x = ["X", future_row_train_x, future_col_train_x]
-    future_x.coordinates = [future_row_train_x, future_col_train_x]
-
-    future_row_train_y = (buff[4] + 1) % 8
-    future_col_train_y = 2
-    future_train_y = ["Y", future_row_train_y, future_col_train_y]
-    future_y.coordinates = [future_row_train_y, future_col_train_y]
-
-    future_row_train_z = 3
-    future_col_train_z = (buff[8] + 1) % 7
-    future_train_z = ["Z", future_row_train_z, future_col_train_z]
-    future_z.coordinates = [future_row_train_z, future_col_train_z]
-
-    future_trains = [future_train_x, future_train_y, future_train_z]
-
-    print()
+def predict_collision(future_trains, current_time, failed_trains, collisions_3):
+    print("Current time: " + str(current_time))
+    print("Failed Trains: " + str(failed_trains))
+    # Logic for detecting which trains will collide in future
+    for i in range(0, len(future_trains)):
+        # Value of train at i index only the coordinates
+        train_i = future_trains[i][1:len(future_trains[i])]
+        for j in range(i + 1, len(future_trains)):
+            # Value train at j index only the coordinates
+            train_j = future_trains[j][1:len(future_trains[j])]
+            if train_i == train_j:
+                predicted_time = current_time + 2
+                if current_time > 1:
+                    predicted_time = current_time + 1
+                print(
+                    "Collision predicted to occur at time: " + str(predicted_time) +
+                    " at position: " + str(train_i)
+                      )
+                trains_that_will_collide = [future_trains[i][0], future_trains[j][0]]
+                print("Trains that will collide: " + str(trains_that_will_collide))
+                if trains_that_will_collide == ["X", "Y"]:  # if trains x and y are colliding
+                    if failed_trains["X"] and failed_trains["Y"]:
+                        print("Both trains have failed. This collision will be unavoidable.")
+                    elif not failed_trains["X"]:
+                        collisions_3["X"] = "Y"  # Set to true so P1 knows to stop train
+                    else:
+                        collisions_3["Y"] = "X"  # If X has failed, stop Y instead
+                elif trains_that_will_collide == ["X", "Z"]:
+                    if failed_trains["X"] and failed_trains["Z"]:
+                        print("Both trains have failed. This collision will be unavoidable.")
+                    elif not failed_trains["X"]:
+                        collisions_3["X"] = "Z"
+                    else:
+                        collisions_3["Z"] = "X"  # If X has failed, stop Z instead
+                elif trains_that_will_collide == ["Y", "Z"]:
+                    if failed_trains["Y"] and failed_trains["Z"]:
+                        print("Both trains have failed. This collision will be unavoidable.")
+                    elif not failed_trains["Y"]:
+                        collisions_3["Y"] = "Z"
+                    else:
+                        collisions_3["Z"] = "Y"  # If Y has failed, stop Z instead
 
 
 if __name__ == "__main__":
@@ -287,16 +283,23 @@ if __name__ == "__main__":
     buffer_a[initial_z] = "Z"
 
     collision_dict = {
+        "X": "",
+        "Y": "",
+        "Z": ""
+    }
+
+    failure_dict = {
         "X": False,
         "Y": False,
         "Z": False
     }
 
     trains_to_stop = manager.dict(collision_dict)
+    trains_that_failed = manager.dict(failure_dict)
 
-    p1 = Process(target=process_1, args=(buffer_a, buffer_b, trains_to_stop))
+    p1 = Process(target=process_1, args=(buffer_a, buffer_b, trains_to_stop, trains_that_failed))
     p2 = Process(target=process_2, args=(buffer_a, buffer_b, buffer_c, buffer_d))
-    p3 = Process(target=process_3, args=(buffer_c, buffer_d, trains_to_stop))
+    p3 = Process(target=process_3, args=(buffer_c, buffer_d, trains_to_stop, trains_that_failed))
 
     p3.start()
     p1.start()
